@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Messenger - Chat</title>
     <link rel="stylesheet" th:href="@{/styles.css}">
+    <style>
+        #user-list {
+            width: 200px;
+            border-left: 1px solid #ccc;
+            padding: 10px;
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body>
 <div id="app">
@@ -12,10 +24,16 @@
 
     <div id="chat">
         <h2>Chat</h2>
+        <a href="/chatroom" id="back-arrow">&larr;</a>
+        <p id="current-room-name"></p>
         <div id="messages"></div>
         <input type="text" id="message-input" placeholder="Type a message">
         <button id="send-message">Send</button>
-        <button id="leave-room">Leave Room</button>
+    </div>
+
+    <div id="user-list">
+        <h3>Users in Room</h3>
+        <ul id="users-list"></ul>
     </div>
 </div>
 <script th:src="@{/chat.js}"></script>

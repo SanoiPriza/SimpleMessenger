@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Queue;
@@ -34,7 +35,7 @@ public class ChatRoomController {
     }
 
     @PostMapping("/join")
-    public ResponseEntity<Map<String, Object>> join(@RequestParam String name, @RequestParam String userId) {
+    public ResponseEntity<Map<String, Object>> join(@RequestParam("name") String name, @RequestParam("userId") String userId) {
         Map<String, Object> response = new HashMap<>();
         try {
             ChatRoom chatRoom = chatRoomService.joinChatRoomByName(name, userId);
@@ -52,20 +53,29 @@ public class ChatRoomController {
         }
     }
 
+    @GetMapping("/joined")
+    public ResponseEntity<List<ChatRoom>> getJoinedRooms(@RequestParam("userId") String userId) {
+        try {
+            List<ChatRoom> joinedRooms = chatRoomService.getJoinedRooms(userId);
+            return ResponseEntity.ok(joinedRooms);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
     @PostMapping("/leave")
-    public ChatRoom leave(@RequestParam String name, @RequestParam String userId) {
+    public ChatRoom leave(@RequestParam("name") String name, @RequestParam("userId") String userId) {
         return chatRoomService.leaveChatRoomByName(name, userId);
     }
 
     @GetMapping("/exists")
-    public boolean exists(@RequestParam String name) {
+    public boolean exists(@RequestParam("name") String name) {
         return chatRoomService.chatRoomExists(name);
     }
 
     @PostMapping("/send")
-    public ResponseEntity<Void> sendMessage(@RequestParam String roomId, @RequestParam String userId, @RequestParam String username, @RequestParam String message) {
-        ChatMessage chatMessage = new ChatMessage(userId, username, roomId, message);
-        chatMessageService.saveMessage(roomId, userId, message);
+    public ResponseEntity<Void> sendMessage(@RequestParam("roomId") String roomId, @RequestParam("userId") String userId, @RequestParam("username") String username, @RequestParam("message") String message) {
+        ChatMessage chatMessage = chatMessageService.saveMessage(roomId, userId, username, message);
 
         Queue<DeferredResult<ResponseEntity<ChatMessage>>> queue = messageQueues.getOrDefault(roomId, new ConcurrentLinkedQueue<>());
         DeferredResult<ResponseEntity<ChatMessage>> result;
@@ -77,12 +87,32 @@ public class ChatRoomController {
     }
 
     @GetMapping("/receive")
-    public DeferredResult<ResponseEntity<ChatMessage>> receiveMessage(@RequestParam String roomId) {
+    public DeferredResult<ResponseEntity<ChatMessage>> receiveMessage(@RequestParam("roomId") String roomId) {
         DeferredResult<ResponseEntity<ChatMessage>> result = new DeferredResult<>(5000L);
         result.onTimeout(() -> result.setResult(ResponseEntity.noContent().build()));
 
         messageQueues.computeIfAbsent(roomId, k -> new ConcurrentLinkedQueue<>()).add(result);
 
         return result;
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<User>> getUsersInRoom(@RequestParam("roomName") String roomName) {
+        try {
+            List<User> users = chatRoomService.getUsersInRoom(roomName);
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @GetMapping("/last10messages")
+    public ResponseEntity<List<ChatMessage>> getLast10Messages(@RequestParam("roomName") String roomName) {
+        try {
+            List<ChatMessage> messages = chatMessageService.getLast10Messages(roomName);
+            return ResponseEntity.ok(messages);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
     }
 }

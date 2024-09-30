@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
+    function showMessage(message) {
+        alert(message);
+    }
+
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const emailInput = document.getElementById('email');
@@ -21,8 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ username, password, email })
             }).then(response => response.json())
               .then(data => {
-                  console.log('User registered:', data);
+                  showMessage('User registered successfully');
                   localStorage.setItem('username', data.username);
+              }).catch(error => {
+                  showMessage('Error during registration: ' + error.message);
               });
         });
     }
@@ -41,16 +47,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }).then(response => response.json())
               .then(data => {
                   if (data && data.id) {
-                      console.log('User logged in:', data);
                       localStorage.setItem('userId', data.id);
                       localStorage.setItem('username', data.username);
-                      displayUserInfo(data);
                       window.location.href = '/chatroom';
                   } else {
-                      console.error('Login failed');
+                      showMessage('Login failed');
                   }
               }).catch(error => {
-                  console.error('Error during login:', error);
+                  showMessage('Error during login: ' + error.message);
               });
         });
     }
@@ -59,8 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userDetailsP) {
             userDetailsP.textContent = `Username: ${user.username}, Email: ${user.email}`;
             userInfoDiv.style.display = 'block';
-        } else {
-            console.error('User details element not found');
         }
     }
 });

@@ -5,6 +5,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +17,9 @@ public class ChatRoomService {
 
     @Autowired
     protected ChatRoomRepository chatRoomRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     public synchronized ChatRoom createChatRoom(String name) {
         try {
@@ -50,5 +55,24 @@ public class ChatRoomService {
 
     public boolean chatRoomExists(String name) {
         return chatRoomRepository.findByName(name) != null;
+    }
+
+    public List<ChatRoom> getJoinedRooms(String userId) {
+        return chatRoomRepository.findByParticipantsContaining(userId);
+    }
+
+    public List<User> getUsersInRoom(String roomName) {
+        ChatRoom chatRoom = findChatRoomByName(roomName);
+        if (chatRoom != null) {
+            return chatRoom.getParticipants().stream()
+                    .map(userId -> userRepository.findById(userId).orElse(null))
+                    .collect(Collectors.toList());
+        } else {
+            throw new IllegalArgumentException("Chat room not found");
+        }
+    }
+
+    private ChatRoom findChatRoomByName(String roomName) {
+        return chatRoomRepository.findByName(roomName);
     }
 }
