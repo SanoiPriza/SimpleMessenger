@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Messenger - Chat</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+<body>
+<div id="app">
+    <h1>Simple Messenger</h1>
+
+    <div id="chat">
+        <h2>Chat</h2>
+        <div id="messages"></div>
+        <input type="text" id="message-input" placeholder="Type a message">
+        <button id="send-message">Send</button>
+        <button id="leave-room">Leave Room</button>
+    </div>
+</div>
+<script th:src="@{/chat.js}"></script>
+</body>
+</html>

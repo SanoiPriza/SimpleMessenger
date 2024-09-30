@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Messenger - Chat Room Management</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+<body>
+<div id="app">
+    <h1>Simple Messenger</h1>
+
+    <div id="user-info">
+        <h2>Logged in as:</h2>
+        <p id="user-details"></p>
+    </div>
+
+    <div id="chat-room">
+        <h2>Chat Room</h2>
+        <input type="text" id="room-id" placeholder="Room ID">
+        <button id="create-room">Create Room</button>
+        <button id="join-room">Join Room</button>
+    </div>
+</div>
+<script th:src="@{/chatroom.js}"></script>
+</body>
+</html>
