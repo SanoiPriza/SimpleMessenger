@@ -49,10 +49,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     username: username,
                     roomId: roomName,
                     message: message,
-                    timestamp: Date.now()
+                    timestamp: new Date().toISOString()
                 };
+
                 socket.send(JSON.stringify(chatMessage));
-                messageInput.value = '';
+
+                const params = new URLSearchParams({
+                    roomId: roomName,
+                    userId: userId,
+                    username: username,
+                    message: message,
+                    timestamp: chatMessage.timestamp
+                });
+
+                fetch(`/api/chatrooms/send?${params.toString()}`, {
+                    method: 'POST'
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to send message');
+                    }
+                    messageInput.value = '';
+                }).catch(error => {
+                    showMessage('Error sending message: ' + error.message);
+                });
             }
         });
     }

@@ -7,23 +7,22 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 
 @RestController
 @RequestMapping("/api/chatrooms")
 public class ChatRoomController {
+
     @Autowired
     private ChatRoomService chatRoomService;
 
     @Autowired
     private ChatMessageService chatMessageService;
 
-    private final Map<String, Queue<DeferredResult<ResponseEntity<ChatMessage>>>> messageQueues = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, ConcurrentLinkedQueue<DeferredResult<ResponseEntity<ChatMessage>>>> messageQueues = new ConcurrentHashMap<>();
 
     @PostMapping("/create")
     public ChatRoom create(@RequestBody ChatRoom chatRoom) {
@@ -74,10 +73,12 @@ public class ChatRoomController {
     }
 
     @PostMapping("/send")
-    public ResponseEntity<Void> sendMessage(@RequestParam("roomId") String roomId, @RequestParam("userId") String userId, @RequestParam("username") String username, @RequestParam("message") String message) {
-        ChatMessage chatMessage = chatMessageService.saveMessage(roomId, userId, username, message);
+    public ResponseEntity<Void> sendMessage(@RequestParam("roomId") String roomId, @RequestParam("userId") String userId, @RequestParam("username") String username, @RequestParam("message") String message, @RequestParam("timestamp") String timestamp) {
+        ChatMessage chatMessage = chatMessageService.saveMessage(roomId, userId, username, message, timestamp);
 
-        Queue<DeferredResult<ResponseEntity<ChatMessage>>> queue = messageQueues.getOrDefault(roomId, new ConcurrentLinkedQueue<>());
+        chatMessageService.saveMessage(chatMessage);
+
+        ConcurrentLinkedQueue<DeferredResult<ResponseEntity<ChatMessage>>> queue = messageQueues.getOrDefault(roomId, new ConcurrentLinkedQueue<>());
         DeferredResult<ResponseEntity<ChatMessage>> result;
         while ((result = queue.poll()) != null) {
             result.setResult(ResponseEntity.ok(chatMessage));
@@ -107,9 +108,9 @@ public class ChatRoomController {
     }
 
     @GetMapping("/last10messages")
-    public ResponseEntity<List<ChatMessage>> getLast10Messages(@RequestParam("roomName") String roomName) {
+    public ResponseEntity<List<ChatMessage>> getMessages(@RequestParam("roomName") String roomName) {
         try {
-            List<ChatMessage> messages = chatMessageService.getLast10Messages(roomName);
+            List<ChatMessage> messages = chatMessageService.getMessages(roomName);
             return ResponseEntity.ok(messages);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(null);

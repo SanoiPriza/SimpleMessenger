@@ -11,16 +11,24 @@ public class ChatMessage {
     private String userId;
     private String username;
     private String message;
-    private long timestamp;
+    private String timestamp;
 
     public ChatMessage() {}
 
-    public ChatMessage(String userId, String username, String roomId, String message) {
+    public ChatMessage(String userId, String username, String roomId, String message, String timestamp) {
         this.userId = userId;
         this.username = username;
         this.roomId = roomId;
         this.message = message;
-        this.timestamp = System.currentTimeMillis();
+        this.timestamp = timestamp;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getRoomId() {
@@ -55,11 +63,11 @@ public class ChatMessage {
         this.message = message;
     }
 
-    public long getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(long timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 }
