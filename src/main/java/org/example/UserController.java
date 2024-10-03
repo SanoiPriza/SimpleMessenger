@@ -13,6 +13,12 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<User> register(@RequestBody User user) {
+        if (user.getUsername() == null || user.getUsername().isEmpty() ||
+                user.getPassword() == null || user.getPassword().isEmpty() ||
+                user.getEmail() == null || user.getEmail().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+
         try {
             User registeredUser = userService.registerUser(user.getUsername(), user.getPassword(), user.getEmail());
             return ResponseEntity.ok(registeredUser);

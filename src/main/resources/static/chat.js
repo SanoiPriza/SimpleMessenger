@@ -38,10 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const timestamp = new Date(chatMessage.timestamp);
         messageElement.innerHTML = `<strong>${chatMessage.username}</strong>: ${chatMessage.message} <span class="timestamp">${timestamp.toLocaleTimeString()}</span>`;
         messagesDiv.appendChild(messageElement);
+        scrollToBottom();
     };
 
-    if (sendMessageButton) {
-        sendMessageButton.addEventListener('click', () => {
+    function triggerSendMessage() {
             const message = messageInput.value;
             if (message) {
                 const chatMessage = {
@@ -73,8 +73,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     showMessage('Error sending message: ' + error.message);
                 });
             }
-        });
-    }
+        }
+
+        if (sendMessageButton) {
+            sendMessageButton.addEventListener('click', triggerSendMessage);
+            messageInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    triggerSendMessage();
+                }
+            });
+        }
 
     function updateUsersList() {
         fetch(`/api/chatrooms/users?roomName=${roomName}`, {
@@ -98,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }).then(response => response.json())
           .then(data => {
               messagesDiv.innerHTML = '';
-              data.reverse().forEach(chatMessage => {
+              data.forEach(chatMessage => {
                   const messageElement = document.createElement('div');
                   messageElement.classList.add('message');
                   if (chatMessage.userId === userId) {
@@ -109,11 +117,16 @@ document.addEventListener('DOMContentLoaded', () => {
                   const timestamp = new Date(chatMessage.timestamp);
                   messageElement.innerHTML = `<strong>${chatMessage.username}</strong>: ${chatMessage.message} <span class="timestamp">${timestamp.toLocaleTimeString()}</span>`;
                   messagesDiv.appendChild(messageElement);
+                  scrollToBottom();
               });
           }).catch(error => {
               showMessage('Error fetching messages: ' + error.message);
           });
     }
+
+    function scrollToBottom() {
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
 
     updateUsersList();
     loadLast10Messages();

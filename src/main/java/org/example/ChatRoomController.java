@@ -108,9 +108,9 @@ public class ChatRoomController {
     }
 
     @GetMapping("/last10messages")
-    public ResponseEntity<List<ChatMessage>> getMessages(@RequestParam("roomName") String roomName) {
+    public ResponseEntity<List<ChatMessage>> getLast10Messages(@RequestParam("roomName") String roomName) {
         try {
-            List<ChatMessage> messages = chatMessageService.getMessages(roomName);
+            List<ChatMessage> messages = chatMessageService.getLatest10Messages(roomName);
             return ResponseEntity.ok(messages);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(null);
