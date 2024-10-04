@@ -12,13 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const username = localStorage.getItem('username');
     const roomName = localStorage.getItem('roomName');
 
-    if (!userId || !username) {
-        showMessage('User ID or username is missing. Please log in again.');
-        return;
-    }
+    if (!userId || !username ) {
+            window.location.href = '/';
+            return;
+        }
 
     if (!roomName) {
-        showMessage('Room name is not set. Please join a room first.');
+        window.location.href = '/chatroom';
         return;
     }
 

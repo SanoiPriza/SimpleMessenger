@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const userId = localStorage.getItem('userId');
     const username = localStorage.getItem('username');
     const userDetailsP = document.getElementById('user-details');
+    const logoutButton = document.getElementById('logout');
 
     if (!userId || !username) {
         window.location.href = '/';
@@ -19,6 +20,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (userDetailsP) {
         userDetailsP.textContent = `${username}`;
     }
+
+    if (logoutButton) {
+            logoutButton.addEventListener('click', () => {
+                localStorage.removeItem('userId');
+                localStorage.removeItem('username');
+                window.location.href = '/';
+            });
+        }
 
     function updateJoinedRooms() {
         fetch(`/api/chatrooms/joined?userId=${userId}`, {
@@ -118,9 +127,13 @@ document.addEventListener('DOMContentLoaded', () => {
                   if (data.error) {
                       throw new Error(data.error);
                   }
-                  localStorage.setItem('roomName', roomName);
-                  showMessage('Joined chat room successfully');
-                  updateJoinedRooms();
+                  if (data.message === "User is already a participant in the chat room") {
+                      showMessage('You are already in this chat room.');
+                  } else {
+                      localStorage.setItem('roomName', roomName);
+                      showMessage('Joined chat room successfully');
+                      updateJoinedRooms();
+                  }
               }).catch(error => {
                   showMessage('Error joining chat room: ' + error.message);
               });

@@ -42,7 +42,11 @@ public class ChatRoomController {
                 response.put("error", "Chat room not found");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
-            response.put("message", "Joined chat room successfully");
+            if (chatRoom.getParticipants().contains(userId)) {
+                response.put("message", "User is already a participant in the chat room");
+            } else {
+                response.put("message", "Joined chat room successfully");
+            }
             response.put("roomId", chatRoom.getId());
             response.put("participants", chatRoom.getParticipants());
             return ResponseEntity.ok(response);

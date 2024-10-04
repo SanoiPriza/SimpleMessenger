@@ -9,59 +9,76 @@ document.addEventListener('DOMContentLoaded', () => {
     const registerButton = document.getElementById('register');
     const loginButton = document.getElementById('login');
 
-    function triggerLogin() {
-            const username = usernameInput.value;
-            const password = passwordInput.value;
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+        window.location.href = '/chatroom';
+        return;
+    }
 
-            fetch(`/api/users/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            }).then(response => response.json())
-              .then(data => {
-                  if (data && data.id) {
-                      localStorage.setItem('userId', data.id);
-                      localStorage.setItem('username', data.username);
-                      window.location.href = '/chatroom';
-                  } else {
-                      showMessage('Login failed');
-                  }
-              }).catch(error => {
-                  showMessage('Error during login: ' + error.message);
-              });
-        }
+    function triggerLogin() {
+        const username = usernameInput.value;
+        const password = passwordInput.value;
+
+        fetch(`/api/users/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        }).then(response => {
+            if (response.status === 401) {
+                showMessage('Incorrect username or password.');
+                return null;
+            } else if (response.status === 400) {
+                showMessage('Invalid input. Please fill in all fields.');
+                return null;
+            }
+            return response.json();
+        }).then(data => {
+            if (data && data.id) {
+                localStorage.setItem('userId', data.id);
+                localStorage.setItem('username', data.username);
+                window.location.href = '/chatroom';
+            } else {
+                showMessage('Login failed');
+            }
+        }).catch(error => {
+            showMessage('Error during login: ' + error.message);
+        });
+    }
 
     function triggerRegister() {
-            const username = usernameInput.value;
-            const password = passwordInput.value;
-            const email = emailInput.value;
+        const username = usernameInput.value;
+        const password = passwordInput.value;
+        const email = emailInput.value;
 
-            fetch('/api/users/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password, email })
-            }).then(response => {
-                if (response.status === 400) {
-                    showMessage('All fields are required.');
-                    return null;
-                }
-                return response.json();
-            }).then(data => {
-                if (data && data.id) {
-                    localStorage.setItem('userId', data.id);
-                    localStorage.setItem('username', data.username);
-                    window.location.href = '/chatroom';
-                } else {
-                    showMessage('Registration failed');
-                }
-            }).catch(error => {
-                showMessage('Error during registration: ' + error.message);
-            });
-        }
+        fetch('/api/users/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password, email })
+        }).then(response => {
+            if (response.status === 400) {
+                showMessage('All fields are required.');
+                return null;
+            } else if (response.status === 409) {
+                showMessage('Username or email is already taken.');
+                return null;
+            }
+            return response.json();
+        }).then(data => {
+            if (data && data.id) {
+                localStorage.setItem('userId', data.id);
+                localStorage.setItem('username', data.username);
+                window.location.href = '/chatroom';
+            } else {
+                showMessage('Registration failed');
+            }
+        }).catch(error => {
+            showMessage('Error during registration: ' + error.message);
+        });
+    }
 
     if (registerButton) {
             registerButton.addEventListener('click', triggerRegister);

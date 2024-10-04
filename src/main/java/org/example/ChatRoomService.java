@@ -36,6 +36,10 @@ public class ChatRoomService {
         logger.info("Attempting to join chat room with name: {}", name);
         ChatRoom chatRoom = chatRoomRepository.findByName(name);
         if (chatRoom != null) {
+            if (chatRoom.getParticipants().contains(userId)) {
+                logger.info("User is already a participant in the chat room");
+                return chatRoom;
+            }
             logger.info("Chat room found, adding user");
             chatRoom.getParticipants().add(userId);
             return chatRoomRepository.save(chatRoom);

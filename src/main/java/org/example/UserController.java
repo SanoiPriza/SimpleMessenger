@@ -12,23 +12,29 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody User user) {
+    public ResponseEntity<String> register(@RequestBody User user) {
         if (user.getUsername() == null || user.getUsername().isEmpty() ||
                 user.getPassword() == null || user.getPassword().isEmpty() ||
                 user.getEmail() == null || user.getEmail().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid input.");
         }
 
-        try {
-            User registeredUser = userService.registerUser(user.getUsername(), user.getPassword(), user.getEmail());
-            return ResponseEntity.ok(registeredUser);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        String registrationResult = userService.registerUser(user.getUsername(), user.getPassword(), user.getEmail());
+        if ("User registered successfully.".equals(registrationResult)) {
+            return ResponseEntity.ok(registrationResult);
+        } else {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(registrationResult);
         }
     }
 
+
     @PostMapping("/login")
     public ResponseEntity<User> login(@RequestBody User user) {
+        if (user.getUsername() == null || user.getUsername().isEmpty() ||
+                user.getPassword() == null || user.getPassword().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+
         try {
             User loggedInUser = userService.loginUser(user.getUsername(), user.getPassword());
             if (loggedInUser != null) {

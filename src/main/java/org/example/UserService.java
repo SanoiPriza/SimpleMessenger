@@ -8,12 +8,21 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public User registerUser(String username, String password, String email) {
+    public String registerUser(String username, String password, String email) {
+        if (userRepository.findByUsername(username) != null) {
+            return "Username already exists.";
+        }
+
+        if (userRepository.findByEmail(email) != null) {
+            return "Email already exists.";
+        }
+
         User user = new User();
         user.setUsername(username);
         user.setPassword(password);
         user.setEmail(email);
-        return userRepository.save(user);
+        userRepository.save(user);
+        return "User registered successfully.";
     }
 
     public User loginUser(String username, String password) {
