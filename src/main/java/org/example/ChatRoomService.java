@@ -36,6 +36,7 @@ public class ChatRoomService {
         logger.info("Attempting to join chat room with name: {}", name);
         ChatRoom chatRoom = chatRoomRepository.findByName(name);
         if (chatRoom != null) {
+            logger.info("Current participants: {}", chatRoom.getParticipants());
             if (chatRoom.getParticipants().contains(userId)) {
                 logger.info("User is already a participant in the chat room");
                 return chatRoom;
@@ -76,7 +77,15 @@ public class ChatRoomService {
         }
     }
 
-    private ChatRoom findChatRoomByName(String roomName) {
+    public ChatRoom findChatRoomByName(String roomName) {
         return chatRoomRepository.findByName(roomName);
+    }
+
+    public void saveChatRoom(ChatRoom chatRoom) {
+        chatRoomRepository.save(chatRoom);
+    }
+
+    public void deleteChatRoom(ChatRoom chatRoom) {
+        chatRoomRepository.delete(chatRoom);
     }
 }

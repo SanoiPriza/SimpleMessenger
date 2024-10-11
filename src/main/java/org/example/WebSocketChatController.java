@@ -12,7 +12,7 @@ public class WebSocketChatController {
     @MessageMapping("/chat.sendMessage")
     @SendTo("/topic/public")
     public ChatMessage sendMessage(ChatMessage chatMessage) {
-        chatMessage.setTimestamp(Instant.now().toString()); // Set timestamp as String
+        chatMessage.setTimestamp(Instant.now().toString());
         return chatMessage;
     }
 }

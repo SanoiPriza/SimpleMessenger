@@ -34,21 +34,29 @@ public class ChatRoomController {
     }
 
     @PostMapping("/join")
-    public ResponseEntity<Map<String, Object>> join(@RequestParam("name") String name, @RequestParam("userId") String userId) {
+    public ResponseEntity<Map<String, Object>> join(@RequestParam("roomName") String roomName, @RequestParam("userId") String userId) {
         Map<String, Object> response = new HashMap<>();
+
         try {
-            ChatRoom chatRoom = chatRoomService.joinChatRoomByName(name, userId);
+            List<ChatRoom> userRooms = chatRoomService.getJoinedRooms(userId);
+
+            boolean isUserInRoom = userRooms.stream().anyMatch(room -> room.getName().equals(roomName));
+            if (isUserInRoom) {
+                response.put("message", "User is already a participant in the chat room");
+                return ResponseEntity.ok(response);
+            }
+
+            ChatRoom chatRoom = chatRoomService.joinChatRoomByName(roomName, userId);
+
             if (chatRoom == null) {
                 response.put("error", "Chat room not found");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
-            if (chatRoom.getParticipants().contains(userId)) {
-                response.put("message", "User is already a participant in the chat room");
-            } else {
-                response.put("message", "Joined chat room successfully");
-            }
+
+            response.put("message", "Joined chat room successfully");
             response.put("roomId", chatRoom.getId());
             response.put("participants", chatRoom.getParticipants());
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("error", "Internal server error");
@@ -77,12 +85,17 @@ public class ChatRoomController {
     }
 
     @PostMapping("/send")
-    public ResponseEntity<Void> sendMessage(@RequestParam("roomId") String roomId, @RequestParam("userId") String userId, @RequestParam("username") String username, @RequestParam("message") String message, @RequestParam("timestamp") String timestamp) {
-        ChatMessage chatMessage = chatMessageService.saveMessage(roomId, userId, username, message, timestamp);
+    public ResponseEntity<Void> sendMessage(@RequestParam("roomName") String roomName,
+                                            @RequestParam("userId") String userId,
+                                            @RequestParam("username") String username,
+                                            @RequestParam("message") String message,
+                                            @RequestParam("timestamp") String timestamp) {
+        ChatMessage chatMessage = chatMessageService.saveMessage(roomName, userId, username, message, timestamp);
 
         chatMessageService.saveMessage(chatMessage);
 
-        ConcurrentLinkedQueue<DeferredResult<ResponseEntity<ChatMessage>>> queue = messageQueues.getOrDefault(roomId, new ConcurrentLinkedQueue<>());
+        ConcurrentLinkedQueue<DeferredResult<ResponseEntity<ChatMessage>>> queue = messageQueues.computeIfAbsent(roomName, k -> new ConcurrentLinkedQueue<>());
+
         DeferredResult<ResponseEntity<ChatMessage>> result;
         while ((result = queue.poll()) != null) {
             result.setResult(ResponseEntity.ok(chatMessage));
@@ -92,11 +105,10 @@ public class ChatRoomController {
     }
 
     @GetMapping("/receive")
-    public DeferredResult<ResponseEntity<ChatMessage>> receiveMessage(@RequestParam("roomId") String roomId) {
+    public DeferredResult<ResponseEntity<ChatMessage>> receiveMessage(@RequestParam("roomName") String roomName) {
         DeferredResult<ResponseEntity<ChatMessage>> result = new DeferredResult<>(5000L);
-        result.onTimeout(() -> result.setResult(ResponseEntity.noContent().build()));
 
-        messageQueues.computeIfAbsent(roomId, k -> new ConcurrentLinkedQueue<>()).add(result);
+        messageQueues.computeIfAbsent(roomName, k -> new ConcurrentLinkedQueue<>()).add(result);
 
         return result;
     }
@@ -119,5 +131,36 @@ public class ChatRoomController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body(null);
         }
+    }
+
+    @PostMapping("/kick")
+    public ResponseEntity<Void> kickUser(@RequestParam("roomName") String roomName, @RequestParam("adminId") String adminId, @RequestParam("userId") String userId) {
+        ChatRoom chatRoom = chatRoomService.findChatRoomByName(roomName);
+        if (chatRoom != null && chatRoom.getCreatorId().equals(adminId)) {
+            chatRoom.getParticipants().remove(userId);
+            chatRoomService.saveChatRoom(chatRoom);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    @PostMapping("/ban")
+    public ResponseEntity<Void> banUser(@RequestParam("roomName") String roomName, @RequestParam("adminId") String adminId, @RequestParam("userId") String userId) {
+        return null;
+    }
+
+    @PostMapping("/timeout")
+    public ResponseEntity<Void> timeoutUser(@RequestParam("roomName") String roomName, @RequestParam("adminId") String adminId, @RequestParam("userId") String userId, @RequestParam("duration") long duration) {
+        return null;
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<Void> deleteRoom(@RequestParam("roomName") String roomName, @RequestParam("adminId") String adminId) {
+        ChatRoom chatRoom = chatRoomService.findChatRoomByName(roomName);
+        if (chatRoom != null && chatRoom.getCreatorId().equals(adminId)) {
+            chatRoomService.deleteChatRoom(chatRoom);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 }

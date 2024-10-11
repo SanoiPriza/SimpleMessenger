@@ -92,19 +92,19 @@ document.addEventListener('DOMContentLoaded', () => {
                           return response.json();
                       }).then(data => {
                           localStorage.setItem('roomName', roomName);
-                          fetch(`/api/chatrooms/join?name=${roomName}&userId=${userId}`, {
-                                          method: 'POST'
-                                      }).then(response => {
-                                          return response.json();
-                                      }).then(data => {
-                                          if (data.error) {
-                                              throw new Error(data.error);
-                                          }
-                                          localStorage.setItem('roomName', roomName);
-                                          updateJoinedRooms();
-                                      }).catch(error => {
-                                          showMessage('Error joining chat room: ' + error.message);
-                                      });
+                          fetch(`/api/chatrooms/join?roomName=${encodeURIComponent(roomName)}&userId=${encodeURIComponent(userId)}`, {
+                                method: 'POST'
+                            }).then(response => {
+                                return response.json();
+                            }).then(data => {
+                                if (data.error) {
+                                    throw new Error(data.error);
+                                    }
+                                localStorage.setItem('roomName', roomName);
+                                    updateJoinedRooms();
+                                }).catch(error => {
+                                    showMessage('Error joining chat room: ' + error.message);
+                                });
                           updateJoinedRooms();
                       }).catch(error => {
                           showMessage('Error creating chat room: ' + error.message);
@@ -120,23 +120,38 @@ document.addEventListener('DOMContentLoaded', () => {
         joinRoomButton.addEventListener('click', () => {
             const roomName = roomIdInput.value;
 
-            fetch(`/api/chatrooms/join?name=${roomName}&userId=${userId}`, {
+            if (!roomName) {
+                showMessage('Please enter a room name.');
+                return;
+            }
+
+            fetch(`/api/chatrooms/join?roomName=${encodeURIComponent(roomName)}&userId=${encodeURIComponent(userId)}`, {
                 method: 'POST'
-            }).then(response => response.json())
-              .then(data => {
-                  if (data.error) {
-                      throw new Error(data.error);
-                  }
-                  if (data.message === "User is already a participant in the chat room") {
-                      showMessage('You are already in this chat room.');
-                  } else {
-                      localStorage.setItem('roomName', roomName);
-                      showMessage('Joined chat room successfully');
-                      updateJoinedRooms();
-                  }
-              }).catch(error => {
-                  showMessage('Error joining chat room: ' + error.message);
-              });
+            }).then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.error); });
+                }
+                return response.json();
+            }).then(data => {
+                console.log('Response Data:', data);
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                if (data.message === "User is already a participant in the chat room") {
+                    showMessage('You are already in this chat room.');
+                } else {
+                    localStorage.setItem('roomName', roomName);
+                    showMessage('Joined chat room successfully');
+                    updateJoinedRooms();
+                }
+            }).catch(error => {
+                if (error.message === "Chat room not found") {
+                    showMessage('The chat room does not exist.');
+                } else {
+                    console.error('Error:', error);
+                    showMessage('An error occurred while joining the room.');
+                }
+            });
         });
     }
 

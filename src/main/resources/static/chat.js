@@ -12,13 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const username = localStorage.getItem('username');
     const roomName = localStorage.getItem('roomName');
 
-    if (!userId || !username ) {
-            window.location.href = '/';
-            return;
-        }
-
-    if (!roomName) {
-        window.location.href = '/chatroom';
+    if (!userId || !username || !roomName) {
+        window.location.href = '/';
         return;
     }
 
@@ -26,20 +21,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const socket = new WebSocket('ws://localhost:8080/ws/chat');
 
+    socket.onopen = () => {
+            socket.send(JSON.stringify({ type: 'SUBSCRIBE', roomName: roomName }));
+        };
+
     socket.onmessage = (event) => {
-        const chatMessage = JSON.parse(event.data);
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message');
-        if (chatMessage.userId === userId) {
-            messageElement.classList.add('my-message');
-        } else {
-            messageElement.classList.add('other-message');
-        }
-        const timestamp = new Date(chatMessage.timestamp);
-        messageElement.innerHTML = `<strong>${chatMessage.username}</strong>: ${chatMessage.message} <span class="timestamp">${timestamp.toLocaleTimeString()}</span>`;
-        messagesDiv.appendChild(messageElement);
-        scrollToBottom();
-    };
+            const chatMessage = JSON.parse(event.data);
+            if (chatMessage.roomName === roomName) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message');
+                if (chatMessage.userId === userId) {
+                    messageElement.classList.add('my-message');
+                } else {
+                    messageElement.classList.add('other-message');
+                }
+                const timestamp = new Date(chatMessage.timestamp);
+                messageElement.innerHTML = `<strong>${chatMessage.username}</strong>: ${chatMessage.message} <span class="timestamp">${timestamp.toLocaleTimeString()}</span>`;
+                messagesDiv.appendChild(messageElement);
+                scrollToBottom();
+            }
+        };
 
     function triggerSendMessage() {
             const message = messageInput.value;
@@ -47,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const chatMessage = {
                     userId: userId,
                     username: username,
-                    roomId: roomName,
+                    roomName: roomName,
                     message: message,
                     timestamp: new Date().toISOString()
                 };
@@ -55,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 socket.send(JSON.stringify(chatMessage));
 
                 const params = new URLSearchParams({
-                    roomId: roomName,
+                    roomName: roomName,
                     userId: userId,
                     username: username,
                     message: message,

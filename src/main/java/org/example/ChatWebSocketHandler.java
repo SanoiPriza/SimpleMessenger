@@ -26,6 +26,11 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
+        String payload = message.getPayload();
+        if (payload.contains("\"type\":\"SUBSCRIBE\"")) {
+            return;
+        }
+
         for (WebSocketSession s : sessions) {
             if (s.isOpen()) {
                 s.sendMessage(message);
