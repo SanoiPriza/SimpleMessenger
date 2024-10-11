@@ -132,35 +132,4 @@ public class ChatRoomController {
             return ResponseEntity.status(500).body(null);
         }
     }
-
-    @PostMapping("/kick")
-    public ResponseEntity<Void> kickUser(@RequestParam("roomName") String roomName, @RequestParam("adminId") String adminId, @RequestParam("userId") String userId) {
-        ChatRoom chatRoom = chatRoomService.findChatRoomByName(roomName);
-        if (chatRoom != null && chatRoom.getCreatorId().equals(adminId)) {
-            chatRoom.getParticipants().remove(userId);
-            chatRoomService.saveChatRoom(chatRoom);
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-    }
-
-    @PostMapping("/ban")
-    public ResponseEntity<Void> banUser(@RequestParam("roomName") String roomName, @RequestParam("adminId") String adminId, @RequestParam("userId") String userId) {
-        return null;
-    }
-
-    @PostMapping("/timeout")
-    public ResponseEntity<Void> timeoutUser(@RequestParam("roomName") String roomName, @RequestParam("adminId") String adminId, @RequestParam("userId") String userId, @RequestParam("duration") long duration) {
-        return null;
-    }
-
-    @DeleteMapping("/delete")
-    public ResponseEntity<Void> deleteRoom(@RequestParam("roomName") String roomName, @RequestParam("adminId") String adminId) {
-        ChatRoom chatRoom = chatRoomService.findChatRoomByName(roomName);
-        if (chatRoom != null && chatRoom.getCreatorId().equals(adminId)) {
-            chatRoomService.deleteChatRoom(chatRoom);
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-    }
 }

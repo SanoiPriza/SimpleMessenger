@@ -11,7 +11,7 @@ public class ChatRoom {
     private String id;
     private String name;
     private List<String> participants;
-    private String creatorId;
+
 
     public String getId() {
         return id;
@@ -35,13 +35,5 @@ public class ChatRoom {
 
     public void setParticipants(List<String> participants) {
         this.participants = participants;
-    }
-
-    public String getCreatorId() {
-        return creatorId;
-    }
-
-    public void setCreatorId(String creatorId) {
-        this.creatorId = creatorId;
     }
 }
